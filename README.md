@@ -38,6 +38,16 @@ To build an installable APK, either use EAS (`npx eas-cli@latest build -p androi
 
 `npm run web` starts a browser preview, which is handy for checking layouts quickly.
 
+## Releasing
+
+GitHub Actions builds the app with Gradle (no Expo account needed) and publishes to Google Play:
+
+- Every push to `main` goes to the **internal testing** track.
+- Tags `v1.2` or `v1.2.3` go to **production**.
+- Pull requests run the checks and an Android build.
+
+For the one-time Play Console, signing key and secrets setup, see [docs/RELEASING.md](docs/RELEASING.md).
+
 ## Checks
 
 ```bash
@@ -63,6 +73,8 @@ src/
   data/                Exercises, animation keyframes, challenge plan
   lib/                 Timer engine, player hook, voice/sound coach, reminders, units and dates
   state/               Persisted app store and types
+plugins/               Expo config plugin for release signing
+.github/workflows/     CI checks and Play Store release
 ```
 
 The timer engine (`src/lib/engine.ts`) is a set of pure functions. It turns a workout plan into a timeline of ready, work and rest phases, works out where the skip buttons go, and decides which voice cues to fire. `usePlayer` runs that timeline against wall-clock deadlines, so the timer stays accurate even when JS timers are throttled.

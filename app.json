@@ -5,7 +5,6 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true
     },
@@ -22,7 +21,8 @@
         "android.permission.VIBRATE",
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.SCHEDULE_EXACT_ALARM"
-      ]
+      ],
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -42,7 +42,8 @@
         }
       ],
       "expo-audio",
-      "expo-font"
+      "expo-font",
+      "./plugins/withReleaseSigning"
     ],
     "experiments": {
       "typedRoutes": false
