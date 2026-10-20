@@ -1,29 +1,38 @@
 # Releasing to Google Play
 
-Two GitHub Actions workflows build the app with Gradle on GitHub's runners. No Expo account or EAS is involved.
+Three GitHub Actions workflows build the app with Gradle on GitHub's runners. No Expo account or EAS is involved.
 
 | Workflow | Trigger | What it does |
 | --- | --- | --- |
-| `ci.yml` | Pull requests and pushes to `main` | Typecheck, lint, unit tests, JS bundle, then an unsigned (debug-key) Android build of the native project |
-| `release.yml` | Push to `main` | Signed `.aab` → **internal testing** track |
-| `release.yml` | Tag `v1.2` or `v1.2.3` | Signed `.aab` → **production** track |
+| `ci.yml` | Pull requests | Typecheck, lint, unit tests, JS bundle, then an Android build signed with the debug key |
+| `apk.yml` | Push to `main` | Checks, then a universal **APK** for manual install, kept as a workflow artifact. Nothing is sent to Play. |
+| `release.yml` | Tag `v1.2` or `v1.2.3` | Checks, then a signed **AAB** uploaded to the Play **production** track |
 
-How a release build works:
+How a build works:
 
 1. `npx expo prebuild` generates the `android/` project from `app.json`. The folder is not committed.
-2. `./gradlew bundleRelease` builds the bundle. `plugins/withReleaseSigning.js` signs it with your **upload key** from GitHub secrets.
-3. [`r0adkll/upload-google-play`](https://github.com/r0adkll/upload-google-play) uploads the bundle and its ProGuard mapping file.
+2. Gradle builds the app. `plugins/withReleaseSigning.js` signs it with your **upload key** from GitHub secrets, or falls back to the debug key when the secrets are missing (only `apk.yml` and `ci.yml` allow that fallback).
+3. For tags, [`r0adkll/upload-google-play`](https://github.com/r0adkll/upload-google-play) uploads the bundle and its ProGuard mapping file.
 
 **Versions**
 
-- `versionCode` is `100 + workflow run number`, so it is unique and always increases.
-- `versionName` is the tag without the `v` (for example `1.2.3`). Builds from `main` are named `<app.json version>-internal.<versionCode>`.
+- `versionCode` is `100 + workflow run number`, so it always increases within each workflow.
+- `versionName` is the tag without the `v` for Play releases (for example `1.2.3`). APKs from `main` are named `<app.json version>-main.<versionCode>`.
 
-The signed bundle is also kept as a workflow artifact for 30 days.
+Each build is kept as a workflow artifact for 30 days.
+
+## Installing an APK from `main`
+
+1. In GitHub, open **Actions → APK**, pick a run, and download the `7minworkout-…-apk` artifact. It is a zip; extract the `.apk`.
+2. Copy it to your phone and open it. Android asks you to allow installs from that app (Files, Chrome, …) the first time.
+
+Android only lets an app update itself with the same signing key. The sideloaded APK and the Play Store version use different keys: the APK uses your upload key or the debug key, while Play delivers the app re-signed by Google. So uninstall one before installing the other (this deletes the app's local workout history). The same applies when switching between debug-signed and upload-key-signed APKs.
 
 ## One-time setup
 
-The workflows only run on `main`. If this repository has no `main` branch yet, merge the app's branch into `main` and make `main` the default branch.
+In GitHub, go to **Settings → General → Default branch** and make `main` the default branch.
+
+You only need steps 1–6 to publish to Google Play. APK builds from `main` work without any secrets; they are then signed with the debug key.
 
 ### 1. Create an upload key
 
@@ -58,7 +67,7 @@ In [Play Console](https://play.google.com/console), choose **Create app**. The p
 
 Google only allows API uploads after an app has had at least one bundle uploaded through Play Console.
 
-1. Push to `main`. Leave the `PLAY_UPLOAD_ENABLED` variable unset for now; the workflow then builds and signs the bundle but skips the upload.
+1. With the keystore secrets from step 2 in place and `PLAY_UPLOAD_ENABLED` still unset, push your first version tag (for example `git tag v1.0.0 && git push origin v1.0.0`). The **Release** workflow builds and signs the bundle but skips the upload.
 2. Open the workflow run and download the `app-release-…` artifact.
 3. In Play Console, go to **Test and release → Testing → Internal testing → Create new release**, upload `app-release.aab`, and roll it out to your testers.
 
@@ -85,8 +94,8 @@ Until Google has reviewed and published the app once, the Play API only accepts 
 
 ## Day-to-day
 
-- **Internal testing:** merge to `main`. A few minutes after the workflow finishes, testers get the new build.
-- **Production:** tag the commit and push the tag.
+- **Try a build on your phone:** merge to `main` and install the APK from the run's artifacts (see above).
+- **Publish to Google Play:** tag the commit and push the tag.
 
   ```bash
   git tag v1.2.0
@@ -102,4 +111,4 @@ Play Console asks for more than a bundle. Its **Dashboard** lists what's missing
 - **Store listing:** title, descriptions, icon (`assets/icon.png`), feature graphic and phone screenshots.
 - **App content:** content rating questionnaire, target audience, ads declaration, data safety form and a privacy policy URL.
   - All workout and weight data stays on the device and nothing is sent anywhere, which keeps the data safety form simple.
-- **New personal developer accounts:** Google requires a closed test with at least 12 opted-in testers for 14 days in a row before you can apply for production access. Run that on the closed testing track first.
+- **New personal developer accounts:** Google requires a closed test with at least 12 opted-in testers for 14 days in a row before you can apply for production access. Upload a build to the closed testing track by hand from Play Console (or ask for a workflow that targets it); `release.yml` publishes only to production.

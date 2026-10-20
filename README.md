@@ -34,17 +34,17 @@ npm start          # then press "a" for an Android emulator, or scan the QR code
 
 Every native module used is bundled in Expo Go, so no development build is needed. Local reminder notifications also work in Expo Go.
 
-To build an installable APK, either use EAS (`npx eas-cli@latest build -p android --profile preview`) or build locally with the Android SDK (`npx expo run:android --variant release`).
+Every push to `main` builds an installable APK in GitHub Actions (see below). To build one locally you need the Android SDK: `npx expo run:android --variant release`.
 
 `npm run web` starts a browser preview, which is handy for checking layouts quickly.
 
 ## Releasing
 
-GitHub Actions builds the app with Gradle (no Expo account needed) and publishes to Google Play:
+GitHub Actions builds the app with Gradle (no Expo account needed):
 
-- Every push to `main` goes to the **internal testing** track.
-- Tags `v1.2` or `v1.2.3` go to **production**.
 - Pull requests run the checks and an Android build.
+- Every push to `main` builds a universal **APK** for manual install, under **Actions → APK** → run → artifacts. Nothing goes to Google Play.
+- Tags `v1.2` or `v1.2.3` build a signed AAB and publish it to the Google Play **production** track.
 
 For the one-time Play Console, signing key and secrets setup, see [docs/RELEASING.md](docs/RELEASING.md).
 
@@ -74,7 +74,7 @@ src/
   lib/                 Timer engine, player hook, voice/sound coach, reminders, units and dates
   state/               Persisted app store and types
 plugins/               Expo config plugin for release signing
-.github/workflows/     CI checks and Play Store release
+.github/workflows/     CI checks, APK builds and Play Store release
 ```
 
 The timer engine (`src/lib/engine.ts`) is a set of pure functions. It turns a workout plan into a timeline of ready, work and rest phases, works out where the skip buttons go, and decides which voice cues to fire. `usePlayer` runs that timeline against wall-clock deadlines, so the timer stays accurate even when JS timers are throttled.

@@ -1,9 +1,8 @@
 name: CI
 
+# Pushes to main are checked and built by apk.yml.
 on:
   pull_request:
-  push:
-    branches: [main]
 
 concurrency:
   group: ci-${{ github.ref }}

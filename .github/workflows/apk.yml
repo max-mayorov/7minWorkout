@@ -1,0 +1,103 @@
+name: APK
+
+# Every push to main builds a universal APK for manual install (sideloading).
+# Nothing is uploaded to Google Play; tags do that through release.yml.
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: apk-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  VERSION_CODE_OFFSET: 100
+
+jobs:
+  apk:
+    name: Build installable APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - run: npm ci
+
+      - name: Typecheck, lint & test
+        run: |
+          npm run typecheck
+          npm run lint
+          npm test -- --ci
+
+      - name: Resolve version
+        id: version
+        run: |
+          code=$((GITHUB_RUN_NUMBER + VERSION_CODE_OFFSET))
+          base=$(node -p "require('./app.json').expo.version")
+          name="${base}-main.${code}"
+          {
+            echo "code=$code"
+            echo "name=$name"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Generate native Android project
+        env:
+          APP_VERSION: ${{ steps.version.outputs.name }}
+          ANDROID_VERSION_CODE: ${{ steps.version.outputs.code }}
+        run: npx expo prebuild --platform android --clean --no-install
+
+      # Sign with the upload key when it is configured, otherwise the
+      # withReleaseSigning plugin falls back to the debug key.
+      - name: Decode upload keystore (optional)
+        id: keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 }}
+        run: |
+          if [[ -n "$KEYSTORE_BASE64" ]]; then
+            echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/upload.jks"
+            echo "path=$RUNNER_TEMP/upload.jks" >> "$GITHUB_OUTPUT"
+            echo "Signed with the upload key." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Signed with the debug key (ANDROID_UPLOAD_KEYSTORE_BASE64 is not set)." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build release APK
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ steps.keystore.outputs.path }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Remove keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/upload.jks"
+
+      - name: Name the APK
+        run: |
+          mkdir -p dist-apk
+          cp android/app/build/outputs/apk/release/app-release.apk \
+            "dist-apk/7minworkout-${{ steps.version.outputs.name }}.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: 7minworkout-${{ steps.version.outputs.name }}-apk
+          path: dist-apk/*.apk
+          retention-days: 30
