@@ -62,7 +62,7 @@ In GitHub, go to **Settings → Secrets and variables → Actions → New reposi
 
 ### 3. Create the app in Play Console
 
-In [Play Console](https://play.google.com/console), choose **Create app**. The package name is fixed when you upload the first bundle and must be `com.maxmayorov.sevenminworkout`, the value of `expo.android.package` in `app.json`. Keep the default **Play App Signing**.
+In [Play Console](https://play.google.com/console), choose **Create app**. The package name is fixed when you upload the first bundle and must be `com.maxmayorov.sevenminutesworkout`, the value of `expo.android.package` in `app.json`. Keep the default **Play App Signing**.
 
 ### 4. Upload the first bundle by hand
 
