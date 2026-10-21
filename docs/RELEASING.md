@@ -7,6 +7,7 @@ Three GitHub Actions workflows build the app with Gradle on GitHub's runners. No
 | `ci.yml` | Pull requests | Typecheck, lint, unit tests, JS bundle, then an Android build signed with the debug key |
 | `apk.yml` | Push to `main` | Checks, then an **APK** for manual install, kept as a workflow artifact. Built for phones only (`arm64-v8a`, `armeabi-v7a`); it won't install on x86 emulators. Nothing is sent to Play. |
 | `release.yml` | Tag `v1.2` or `v1.2.3` | Checks, then a signed **AAB** uploaded to the Play **production** track |
+| `release.yml` | **Run workflow** button (any branch) | Checks, then a signed **AAB** kept as a workflow artifact. Never uploaded to Play. |
 
 How a build works:
 
@@ -17,7 +18,7 @@ How a build works:
 **Versions**
 
 - `versionCode` is `100 + workflow run number`, so it always increases within each workflow.
-- `versionName` is the tag without the `v` for Play releases (for example `1.2.3`). APKs from `main` are named `<app.json version>-main.<versionCode>`.
+- `versionName` is the tag without the `v` for Play releases (for example `1.2.3`). APKs from `main` are named `<app.json version>-main.<versionCode>`, and manual AAB builds `<app.json version>-manual.<versionCode>`.
 
 Each build is kept as a workflow artifact for 30 days.
 
@@ -67,7 +68,7 @@ In [Play Console](https://play.google.com/console), choose **Create app**. The p
 
 Google only allows API uploads after an app has had at least one bundle uploaded through Play Console.
 
-1. With the keystore secrets from step 2 in place and `PLAY_UPLOAD_ENABLED` still unset, push your first version tag (for example `git tag v1.0.0 && git push origin v1.0.0`). The **Release** workflow builds and signs the bundle but skips the upload.
+1. With the keystore secrets from step 2 in place, open **Actions → Release → Run workflow** and pick `main`. The workflow builds and signs the bundle but never uploads a manual run to Play.
 2. Open the workflow run and download the `app-release-…` artifact.
 3. In Play Console, go to **Test and release → Testing → Internal testing → Create new release**, upload `app-release.aab`, and roll it out to your testers.
 
@@ -95,6 +96,7 @@ Until Google has reviewed and published the app once, the Play API only accepts 
 ## Day-to-day
 
 - **Try a build on your phone:** merge to `main` and install the APK from the run's artifacts (see above).
+- **Get a signed AAB without publishing:** **Actions → Release → Run workflow**, then download the `app-release-…` artifact.
 - **Publish to Google Play:** tag the commit and push the tag.
 
   ```bash

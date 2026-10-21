@@ -45,6 +45,7 @@ GitHub Actions builds the app with Gradle (no Expo account needed):
 - Pull requests run the checks and an Android build.
 - Every push to `main` builds an **APK** for manual install on phones (arm64 and 32-bit ARM, not x86 emulators), under **Actions → APK** → run → artifacts. Nothing goes to Google Play.
 - Tags `v1.2` or `v1.2.3` build a signed AAB and publish it to the Google Play **production** track.
+- **Actions → Release → Run workflow** builds a signed AAB from any branch as a downloadable artifact, without publishing it.
 
 For the one-time Play Console, signing key and secrets setup, see [docs/RELEASING.md](docs/RELEASING.md).
 
