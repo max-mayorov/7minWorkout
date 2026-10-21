@@ -34,7 +34,7 @@ npm start          # then press "a" for an Android emulator, or scan the QR code
 
 Every native module used is bundled in Expo Go, so no development build is needed. Local reminder notifications also work in Expo Go.
 
-Every push to `main` builds an installable APK in GitHub Actions (see below). To build one locally you need the Android SDK: `npx expo run:android --variant release`.
+GitHub Actions can build an installable APK on demand (see below). To build one locally you need the Android SDK: `npx expo run:android --variant release`.
 
 `npm run web` starts a browser preview, which is handy for checking layouts quickly.
 
@@ -43,7 +43,7 @@ Every push to `main` builds an installable APK in GitHub Actions (see below). To
 GitHub Actions builds the app with Gradle (no Expo account needed):
 
 - Pull requests run the checks and an Android build.
-- Every push to `main` builds an **APK** for manual install on phones (arm64 and 32-bit ARM, not x86 emulators), under **Actions → APK** → run → artifacts. Nothing goes to Google Play.
+- **Actions → APK → Run workflow** builds an **APK** for manual install on phones (arm64 and 32-bit ARM, not x86 emulators) from any branch; download it from the run's artifacts. It never runs automatically, and nothing goes to Google Play.
 - Tags `v1.2` or `v1.2.3` build a signed AAB and publish it to the Google Play **production** track.
 - **Actions → Release → Run workflow** builds a signed AAB from any branch as a downloadable artifact, without publishing it.
 

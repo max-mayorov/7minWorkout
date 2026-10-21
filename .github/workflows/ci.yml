@@ -1,6 +1,6 @@
 name: CI
 
-# Pushes to main are checked and built by apk.yml.
+# Pull requests only. Android builds for main run on demand (apk.yml) or on tags (release.yml).
 on:
   pull_request:
 
