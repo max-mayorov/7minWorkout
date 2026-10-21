@@ -16,7 +16,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.maxmayorov.sevenminworkout",
+      "package": "com.maxmayorov.sevenminutesworkout",
       "permissions": [
         "android.permission.VIBRATE",
         "android.permission.RECEIVE_BOOT_COMPLETED",

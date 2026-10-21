@@ -4,27 +4,27 @@ Three GitHub Actions workflows build the app with Gradle on GitHub's runners. No
 
 | Workflow | Trigger | What it does |
 | --- | --- | --- |
-| `ci.yml` | Pull requests | Typecheck, lint, unit tests, JS bundle, then an Android build signed with the debug key |
-| `apk.yml` | Push to `main` | Checks, then an **APK** for manual install, kept as a workflow artifact. Built for phones only (`arm64-v8a`, `armeabi-v7a`); it won't install on x86 emulators. Nothing is sent to Play. |
+| `ci.yml` | Pull requests and pushes to `main` | Typecheck, lint, unit tests and JS bundle. No native Android build. |
+| `apk.yml` | **Run workflow** button only (any branch) | Checks, then an **APK** for manual install, kept as a workflow artifact. Built for phones only (`arm64-v8a`, `armeabi-v7a`); it won't install on x86 emulators. Nothing is sent to Play. |
 | `release.yml` | Tag `v1.2` or `v1.2.3` | Checks, then a signed **AAB** uploaded to the Play **production** track |
 | `release.yml` | **Run workflow** button (any branch) | Checks, then a signed **AAB** kept as a workflow artifact. Never uploaded to Play. |
 
 How a build works:
 
 1. `npx expo prebuild` generates the `android/` project from `app.json`. The folder is not committed.
-2. Gradle builds the app. `plugins/withReleaseSigning.js` signs it with your **upload key** from GitHub secrets, or falls back to the debug key when the secrets are missing (only `apk.yml` and `ci.yml` allow that fallback).
+2. Gradle builds the app. `plugins/withReleaseSigning.js` signs it with your **upload key** from GitHub secrets, or falls back to the debug key when the secrets are missing (only `apk.yml` allows that fallback).
 3. For tags, [`r0adkll/upload-google-play`](https://github.com/r0adkll/upload-google-play) uploads the bundle and its ProGuard mapping file.
 
 **Versions**
 
 - `versionCode` is `100 + workflow run number`, so it always increases within each workflow.
-- `versionName` is the tag without the `v` for Play releases (for example `1.2.3`). APKs from `main` are named `<app.json version>-main.<versionCode>`, and manual AAB builds `<app.json version>-manual.<versionCode>`.
+- `versionName` is the tag without the `v` for Play releases (for example `1.2.3`). APKs are named `<app.json version>-apk.<versionCode>`, and manual AAB builds `<app.json version>-manual.<versionCode>`.
 
 Each build is kept as a workflow artifact for 30 days.
 
-## Installing an APK from `main`
+## Building and installing an APK
 
-1. In GitHub, open **Actions → APK**, pick a run, and download the `7minworkout-…-apk` artifact. It is a zip; extract the `.apk`.
+1. In GitHub, open **Actions → APK → Run workflow** and pick a branch (usually `main`). When the run finishes, download the `7minworkout-…-apk` artifact. It is a zip; extract the `.apk`.
 2. Copy it to your phone and open it. Android asks you to allow installs from that app (Files, Chrome, …) the first time.
 
 Android only lets an app update itself with the same signing key. The sideloaded APK and the Play Store version use different keys: the APK uses your upload key or the debug key, while Play delivers the app re-signed by Google. So uninstall one before installing the other (this deletes the app's local workout history). The same applies when switching between debug-signed and upload-key-signed APKs.
@@ -33,7 +33,7 @@ Android only lets an app update itself with the same signing key. The sideloaded
 
 In GitHub, go to **Settings → General → Default branch** and make `main` the default branch.
 
-You only need steps 1–6 to publish to Google Play. APK builds from `main` work without any secrets; they are then signed with the debug key.
+You only need steps 1–6 to publish to Google Play. APK builds work without any secrets; they are then signed with the debug key.
 
 ### 1. Create an upload key
 
@@ -62,7 +62,7 @@ In GitHub, go to **Settings → Secrets and variables → Actions → New reposi
 
 ### 3. Create the app in Play Console
 
-In [Play Console](https://play.google.com/console), choose **Create app**. The package name is fixed when you upload the first bundle and must be `com.maxmayorov.sevenminworkout`, the value of `expo.android.package` in `app.json`. Keep the default **Play App Signing**.
+In [Play Console](https://play.google.com/console), choose **Create app**. The package name is fixed when you upload the first bundle and must be `com.maxmayorov.sevenminutesworkout`, the value of `expo.android.package` in `app.json`. Keep the default **Play App Signing**.
 
 ### 4. Upload the first bundle by hand
 
@@ -95,7 +95,7 @@ Until Google has reviewed and published the app once, the Play API only accepts 
 
 ## Day-to-day
 
-- **Try a build on your phone:** merge to `main` and install the APK from the run's artifacts (see above).
+- **Try a build on your phone:** run **Actions → APK → Run workflow** and install the APK from the run's artifacts (see above). Merging to `main` doesn't build anything by itself.
 - **Get a signed AAB without publishing:** **Actions → Release → Run workflow**, then download the `app-release-…` artifact.
 - **Publish to Google Play:** tag the commit and push the tag.
 

@@ -1,12 +1,12 @@
 name: APK
 
-# Every push to main builds an APK for manual install (sideloading) on real
-# phones: arm64-v8a and armeabi-v7a only, since x86 builds are just for emulators.
-# Nothing is uploaded to Google Play; tags do that through release.yml.
+# On demand only (Actions -> APK -> Run workflow, any branch): builds an APK
+# for manual install (sideloading) on real phones. arm64-v8a and armeabi-v7a
+# only, since x86 builds are just for emulators. Nothing is uploaded to Google
+# Play; tags do that through release.yml.
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: apk-${{ github.ref }}
@@ -49,7 +49,7 @@ jobs:
         run: |
           code=$((GITHUB_RUN_NUMBER + VERSION_CODE_OFFSET))
           base=$(node -p "require('./app.json').expo.version")
-          name="${base}-main.${code}"
+          name="${base}-apk.${code}"
           {
             echo "code=$code"
             echo "name=$name"
