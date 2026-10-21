@@ -1,0 +1,128 @@
+name: Release
+
+# Tag v1.2 / v1.2.3 -> signed AAB on the Play production track.
+# Installable APKs for pushes to main come from apk.yml.
+# See docs/RELEASING.md for the one-time Play Console and secrets setup.
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  # Keeps CI version codes above any build uploaded by hand (see docs/RELEASING.md).
+  VERSION_CODE_OFFSET: 100
+
+jobs:
+  release:
+    name: Build & publish to Google Play
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - run: npm ci
+
+      - name: Typecheck, lint & test
+        run: |
+          npm run typecheck
+          npm run lint
+          npm test -- --ci
+
+      - name: Resolve version
+        id: version
+        run: |
+          code=$((GITHUB_RUN_NUMBER + VERSION_CODE_OFFSET))
+          name="${GITHUB_REF_NAME#v}"
+          package=$(node -p "require('./app.json').expo.android.package")
+          {
+            echo "code=$code"
+            echo "name=$name"
+            echo "package=$package"
+          } >> "$GITHUB_OUTPUT"
+          echo "Building $package $name (versionCode $code) for the production track" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Generate native Android project
+        env:
+          APP_VERSION: ${{ steps.version.outputs.name }}
+          ANDROID_VERSION_CODE: ${{ steps.version.outputs.code }}
+        run: npx expo prebuild --platform android --clean --no-install
+
+      - name: Decode upload keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_BASE64 }}
+        run: |
+          if [[ -z "$KEYSTORE_BASE64" ]]; then
+            echo "::error::ANDROID_UPLOAD_KEYSTORE_BASE64 is not set. See docs/RELEASING.md."
+            exit 1
+          fi
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/upload.jks"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build signed release bundle
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/upload.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew bundleRelease --no-daemon
+
+      - name: Check the bundle is not debug-signed
+        run: |
+          aab=android/app/build/outputs/bundle/release/app-release.aab
+          signer=$(keytool -printcert -jarfile "$aab" 2>&1 || true)
+          if [[ -z "$signer" ]] || grep -qE "CN=Android Debug|Not a signed jar" <<< "$signer"; then
+            echo "::error::$aab is unsigned or signed with the debug key."
+            exit 1
+          fi
+
+      - name: Remove keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/upload.jks"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-release-${{ steps.version.outputs.name }}
+          path: |
+            android/app/build/outputs/bundle/release/app-release.aab
+            android/app/build/outputs/mapping/release/mapping.txt
+          retention-days: 30
+
+      - name: Note skipped upload
+        if: vars.PLAY_UPLOAD_ENABLED != 'true'
+        run: echo "Play upload skipped (PLAY_UPLOAD_ENABLED is not 'true'). Download the bundle from this run's artifacts." >> "$GITHUB_STEP_SUMMARY"
+
+      # Turn on with the repository variable PLAY_UPLOAD_ENABLED=true once the
+      # app exists in Play Console and its first bundle was uploaded by hand.
+      - name: Upload to Google Play (production)
+        if: vars.PLAY_UPLOAD_ENABLED == 'true'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: ${{ steps.version.outputs.package }}
+          releaseFiles: android/app/build/outputs/bundle/release/app-release.aab
+          mappingFile: android/app/build/outputs/mapping/release/mapping.txt
+          releaseName: ${{ steps.version.outputs.name }} (${{ steps.version.outputs.code }})
+          track: production
+          # Must be "draft" until the app has been published once; see docs/RELEASING.md.
+          status: ${{ vars.PLAY_RELEASE_STATUS || 'completed' }}
