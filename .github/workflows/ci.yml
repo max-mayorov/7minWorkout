@@ -1,7 +1,7 @@
 name: CI
 
-# Fast checks on pull requests and pushes to main. The slow Android build runs
-# on pull requests only; for main it runs on demand (apk.yml) or on tags (release.yml).
+# Fast checks only, on pull requests and pushes to main. Native Android builds
+# never run automatically here: use apk.yml (on demand) or release.yml (tags).
 on:
   pull_request:
   push:
@@ -35,34 +35,3 @@ jobs:
       - name: Bundle JavaScript for Android
         run: npx expo export --platform android --output-dir dist
 
-  android-build:
-    name: Android build
-    if: github.event_name == 'pull_request'
-    needs: checks
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    steps:
-      - uses: actions/checkout@v5
-
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 22
-          cache: npm
-
-      - uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: 17
-
-      - run: npm ci
-
-      - name: Generate native Android project
-        run: npx expo prebuild --platform android --clean --no-install
-
-      - uses: gradle/actions/setup-gradle@v4
-
-      # No upload key here, so the release build falls back to debug signing.
-      # Building a single ABI keeps the check fast; releases build all of them.
-      - name: Build release bundle
-        working-directory: android
-        run: ./gradlew bundleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a

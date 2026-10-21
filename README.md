@@ -42,7 +42,7 @@ GitHub Actions can build an installable APK on demand (see below). To build one 
 
 GitHub Actions builds the app with Gradle (no Expo account needed):
 
-- Pull requests run the fast checks (typecheck, lint, tests) and an Android build. Pushes to `main` run only the fast checks.
+- Pull requests and pushes to `main` run only the fast checks (typecheck, lint, tests, JS bundle). No Android build runs automatically.
 - **Actions → APK → Run workflow** builds an **APK** for manual install on phones (arm64 and 32-bit ARM, not x86 emulators) from any branch; download it from the run's artifacts. It never runs automatically, and nothing goes to Google Play.
 - Tags `v1.2` or `v1.2.3` build a signed AAB and publish it to the Google Play **production** track.
 - **Actions → Release → Run workflow** builds a signed AAB from any branch as a downloadable artifact, without publishing it.

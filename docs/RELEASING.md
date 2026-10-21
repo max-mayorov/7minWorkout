@@ -4,7 +4,7 @@ Three GitHub Actions workflows build the app with Gradle on GitHub's runners. No
 
 | Workflow | Trigger | What it does |
 | --- | --- | --- |
-| `ci.yml` | Pull requests and pushes to `main` | Typecheck, lint, unit tests and JS bundle. Pull requests also get an Android build signed with the debug key. |
+| `ci.yml` | Pull requests and pushes to `main` | Typecheck, lint, unit tests and JS bundle. No native Android build. |
 | `apk.yml` | **Run workflow** button only (any branch) | Checks, then an **APK** for manual install, kept as a workflow artifact. Built for phones only (`arm64-v8a`, `armeabi-v7a`); it won't install on x86 emulators. Nothing is sent to Play. |
 | `release.yml` | Tag `v1.2` or `v1.2.3` | Checks, then a signed **AAB** uploaded to the Play **production** track |
 | `release.yml` | **Run workflow** button (any branch) | Checks, then a signed **AAB** kept as a workflow artifact. Never uploaded to Play. |
@@ -12,7 +12,7 @@ Three GitHub Actions workflows build the app with Gradle on GitHub's runners. No
 How a build works:
 
 1. `npx expo prebuild` generates the `android/` project from `app.json`. The folder is not committed.
-2. Gradle builds the app. `plugins/withReleaseSigning.js` signs it with your **upload key** from GitHub secrets, or falls back to the debug key when the secrets are missing (only `apk.yml` and `ci.yml` allow that fallback).
+2. Gradle builds the app. `plugins/withReleaseSigning.js` signs it with your **upload key** from GitHub secrets, or falls back to the debug key when the secrets are missing (only `apk.yml` allows that fallback).
 3. For tags, [`r0adkll/upload-google-play`](https://github.com/r0adkll/upload-google-play) uploads the bundle and its ProGuard mapping file.
 
 **Versions**
