@@ -1,8 +1,11 @@
 name: CI
 
-# Pull requests only. Android builds for main run on demand (apk.yml) or on tags (release.yml).
+# Fast checks on pull requests and pushes to main. The slow Android build runs
+# on pull requests only; for main it runs on demand (apk.yml) or on tags (release.yml).
 on:
   pull_request:
+  push:
+    branches: [main]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -34,6 +37,7 @@ jobs:
 
   android-build:
     name: Android build
+    if: github.event_name == 'pull_request'
     needs: checks
     runs-on: ubuntu-latest
     timeout-minutes: 45
