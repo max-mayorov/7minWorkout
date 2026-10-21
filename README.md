@@ -43,10 +43,12 @@ Every push to `main` builds an installable APK in GitHub Actions (see below). To
 GitHub Actions builds the app with Gradle (no Expo account needed):
 
 - Pull requests run the checks and an Android build.
-- Every push to `main` builds a universal **APK** for manual install, under **Actions → APK** → run → artifacts. Nothing goes to Google Play.
+- Every push to `main` builds an **APK** for manual install on phones (arm64 and 32-bit ARM, not x86 emulators), under **Actions → APK** → run → artifacts. Nothing goes to Google Play.
 - Tags `v1.2` or `v1.2.3` build a signed AAB and publish it to the Google Play **production** track.
 
 For the one-time Play Console, signing key and secrets setup, see [docs/RELEASING.md](docs/RELEASING.md).
+
+`package.json` excludes `react-native-reanimated`, `react-native-gesture-handler` and `react-native-worklets` from native autolinking. npm installs them only because expo-router's Drawer navigator needs them; the app doesn't use them, and compiling their C++ made every Android build much slower. If you add something that needs them (Reanimated animations, a drawer, gesture-based components), remove them from `expo.autolinking.exclude`.
 
 ## Checks
 

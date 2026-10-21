@@ -5,7 +5,7 @@ Three GitHub Actions workflows build the app with Gradle on GitHub's runners. No
 | Workflow | Trigger | What it does |
 | --- | --- | --- |
 | `ci.yml` | Pull requests | Typecheck, lint, unit tests, JS bundle, then an Android build signed with the debug key |
-| `apk.yml` | Push to `main` | Checks, then a universal **APK** for manual install, kept as a workflow artifact. Nothing is sent to Play. |
+| `apk.yml` | Push to `main` | Checks, then an **APK** for manual install, kept as a workflow artifact. Built for phones only (`arm64-v8a`, `armeabi-v7a`); it won't install on x86 emulators. Nothing is sent to Play. |
 | `release.yml` | Tag `v1.2` or `v1.2.3` | Checks, then a signed **AAB** uploaded to the Play **production** track |
 
 How a build works:
