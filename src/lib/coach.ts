@@ -5,15 +5,13 @@ import { Platform } from 'react-native';
 
 import type { Cue } from './engine';
 
-let tick: AudioPlayer | null = null;
 let go: AudioPlayer | null = null;
-let audioReady = false;
 
-function ensureAudio() {
-  if (audioReady) return;
-  audioReady = true;
+// Loads the start beep ahead of time so its first play doesn't stall the
+// voice cue spoken right after it.
+export function prepareAudio() {
+  if (go) return;
   setAudioModeAsync({ playsInSilentMode: true, interruptionMode: 'duckOthers' }).catch(() => {});
-  tick = createAudioPlayer(require('../../assets/sounds/tick.wav'));
   go = createAudioPlayer(require('../../assets/sounds/go.wav'));
 }
 
@@ -36,12 +34,10 @@ export function runCues(cues: Cue[], options: CoachOptions) {
   for (const cue of cues) {
     if (cue.type === 'beep') {
       if (!options.sound) continue;
-      ensureAudio();
-      play(cue.final ? go : tick);
+      prepareAudio();
+      play(go);
       if (Platform.OS !== 'web') {
-        Haptics.impactAsync(
-          cue.final ? Haptics.ImpactFeedbackStyle.Heavy : Haptics.ImpactFeedbackStyle.Light,
-        ).catch(() => {});
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
       }
     } else if (options.voice) {
       say(cue.text);
@@ -54,9 +50,6 @@ export function silence() {
 }
 
 export function releaseAudio() {
-  tick?.remove();
   go?.remove();
-  tick = null;
   go = null;
-  audioReady = false;
 }

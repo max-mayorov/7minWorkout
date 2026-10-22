@@ -75,20 +75,16 @@ export function nextExerciseStart(timeline: Phase[], phaseIndex: number): number
   return timeline.length;
 }
 
-export type Cue =
-  | { type: 'beep'; final: boolean }
-  | { type: 'say'; text: string };
+export type Cue = { type: 'beep' } | { type: 'say'; text: string };
 
-// Spoken/beeped cues fired when the visible whole-second countdown changes
-// from `prevSecLeft` to `secLeft` within `phase`.
+// Spoken cues fired when the visible whole-second countdown changes from
+// `prevSecLeft` to `secLeft` within `phase`. The 3-2-1 countdown is voice only:
+// a beep alongside each number grabbed audio focus and delayed the speech.
 export function cuesForTick(phase: Phase, prevSecLeft: number, secLeft: number): Cue[] {
   if (secLeft === prevSecLeft) return [];
   const cues: Cue[] = [];
-  if (secLeft <= 3 && secLeft >= 1) {
-    cues.push({ type: 'beep', final: false });
-    if (phase.kind !== 'work' || phase.durationSec >= 10) {
-      cues.push({ type: 'say', text: String(secLeft) });
-    }
+  if (secLeft <= 3 && secLeft >= 1 && (phase.kind !== 'work' || phase.durationSec >= 10)) {
+    cues.push({ type: 'say', text: String(secLeft) });
   }
   if (phase.kind === 'work' && phase.durationSec >= 20) {
     const half = Math.floor(phase.durationSec / 2);
@@ -106,7 +102,7 @@ export function cuesForPhaseStart(phase: Phase, next: Phase | undefined): Cue[] 
       return [{ type: 'say', text: `Take a rest. Next, ${name}` }];
     case 'work':
       return [
-        { type: 'beep', final: true },
+        { type: 'beep' },
         { type: 'say', text: next ? name : `Last one. ${name}` },
       ];
   }

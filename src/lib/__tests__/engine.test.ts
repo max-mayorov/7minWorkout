@@ -92,10 +92,9 @@ describe('cuesForTick', () => {
   const [, work] = buildTimeline(plan());
 
   it('counts down the last three seconds', () => {
-    expect(cuesForTick(work, 4, 3)).toEqual([
-      { type: 'beep', final: false },
-      { type: 'say', text: '3' },
-    ]);
+    // Voice only: no beep alongside the numbers.
+    expect(cuesForTick(work, 4, 3)).toEqual([{ type: 'say', text: '3' }]);
+    expect(cuesForTick(work, 2, 1)).toEqual([{ type: 'say', text: '1' }]);
     expect(cuesForTick(work, 3, 3)).toEqual([]);
   });
 
