@@ -96,11 +96,11 @@ export function usePlayer(plan: WorkoutPlan | null, coach: CoachOptions) {
         pausedRemainingRef.current = phase.durationSec * 1000;
       } else {
         endAtRef.current = Date.now() + phase.durationSec * 1000;
-        runCues(cuesForPhaseStart(phase, nextWork, total), coachRef.current);
+        runCues(cuesForPhaseStart(phase, nextWork), coachRef.current);
       }
       publish();
     },
-    [timeline, total, publish],
+    [timeline, publish],
   );
 
   // Start the workout once.

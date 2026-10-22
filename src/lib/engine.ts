@@ -97,14 +97,13 @@ export function cuesForTick(phase: Phase, prevSecLeft: number, secLeft: number):
   return cues;
 }
 
-export function cuesForPhaseStart(phase: Phase, next: Phase | undefined, total: number): Cue[] {
+export function cuesForPhaseStart(phase: Phase, next: Phase | undefined): Cue[] {
   const name = getExercise(phase.exerciseId).name;
-  const position = `${phase.itemIndex + 1} of ${total}`;
   switch (phase.kind) {
     case 'ready':
       return [{ type: 'say', text: `Ready to go! Start with ${name}` }];
     case 'rest':
-      return [{ type: 'say', text: `Take a rest. Next, exercise ${position}, ${name}` }];
+      return [{ type: 'say', text: `Take a rest. Next, ${name}` }];
     case 'work':
       return [
         { type: 'beep', final: true },
