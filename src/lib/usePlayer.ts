@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { runCues, silence, type CoachOptions } from './coach';
+import { prepareAudio, runCues, silence, type CoachOptions } from './coach';
 import {
   buildTimeline,
   cuesForPhaseStart,
@@ -13,7 +13,10 @@ import {
 } from './engine';
 import type { WorkoutPlan } from './plans';
 
-const TICK_MS = 200;
+// Fine-grained so countdown numbers are spoken on the second; the screen is
+// only re-rendered every UI_REFRESH_MS or when the whole second changes.
+const TICK_MS = 50;
+const UI_REFRESH_MS = 200;
 
 export type PlayerSnapshot = {
   index: number;
@@ -51,6 +54,7 @@ export function usePlayer(plan: WorkoutPlan | null, coach: CoachOptions) {
   const pausedRemainingRef = useRef<number | null>(null);
   const lastSecRef = useRef(0);
   const lastTickRef = useRef(0);
+  const lastPublishRef = useRef(0);
   const startedAtRef = useRef(0);
   const activeMsRef = useRef(0);
   const pausesRef = useRef(0);
@@ -70,6 +74,7 @@ export function usePlayer(plan: WorkoutPlan | null, coach: CoachOptions) {
     const remainingMs = paused
       ? (pausedRemainingRef.current as number)
       : Math.max(0, endAtRef.current - Date.now());
+    lastPublishRef.current = Date.now();
     setSnapshot({
       index: indexRef.current,
       phase: timeline[indexRef.current],
@@ -96,11 +101,11 @@ export function usePlayer(plan: WorkoutPlan | null, coach: CoachOptions) {
         pausedRemainingRef.current = phase.durationSec * 1000;
       } else {
         endAtRef.current = Date.now() + phase.durationSec * 1000;
-        runCues(cuesForPhaseStart(phase, nextWork, total), coachRef.current);
+        runCues(cuesForPhaseStart(phase, nextWork), coachRef.current);
       }
       publish();
     },
-    [timeline, total, publish],
+    [timeline, publish],
   );
 
   // Start the workout once.
@@ -108,6 +113,7 @@ export function usePlayer(plan: WorkoutPlan | null, coach: CoachOptions) {
     if (timeline.length === 0) return;
     startedAtRef.current = Date.now();
     lastTickRef.current = Date.now();
+    if (coachRef.current.sound) prepareAudio();
     enterPhase(0);
     return () => silence();
   }, [timeline, enterPhase]);
@@ -134,9 +140,10 @@ export function usePlayer(plan: WorkoutPlan | null, coach: CoachOptions) {
         return;
       }
       const secLeft = Math.ceil(remaining / 1000);
+      const secondChanged = secLeft !== lastSecRef.current;
       runCues(cuesForTick(phase, lastSecRef.current, secLeft), coachRef.current);
       lastSecRef.current = secLeft;
-      publish();
+      if (secondChanged || now - lastPublishRef.current >= UI_REFRESH_MS) publish();
     }, TICK_MS);
     return () => clearInterval(timer);
   }, [timeline, enterPhase, publish]);

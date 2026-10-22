@@ -3,6 +3,7 @@ import { describe, expect, it } from '@jest/globals';
 import {
   buildTimeline,
   countExercisesDone,
+  cuesForPhaseStart,
   cuesForTick,
   estimateKcal,
   nextExerciseStart,
@@ -77,14 +78,23 @@ describe('skipping', () => {
   });
 });
 
+describe('cuesForPhaseStart', () => {
+  it('announces only the next exercise name during a rest', () => {
+    const timeline = buildTimeline(plan());
+    // ready(0) work(1) rest(2) work(3)
+    expect(cuesForPhaseStart(timeline[2], timeline[3])).toEqual([
+      { type: 'say', text: 'Take a rest. Next, Wall Sit' },
+    ]);
+  });
+});
+
 describe('cuesForTick', () => {
   const [, work] = buildTimeline(plan());
 
   it('counts down the last three seconds', () => {
-    expect(cuesForTick(work, 4, 3)).toEqual([
-      { type: 'beep', final: false },
-      { type: 'say', text: '3' },
-    ]);
+    // Voice only: no beep alongside the numbers.
+    expect(cuesForTick(work, 4, 3)).toEqual([{ type: 'say', text: '3' }]);
+    expect(cuesForTick(work, 2, 1)).toEqual([{ type: 'say', text: '1' }]);
     expect(cuesForTick(work, 3, 3)).toEqual([]);
   });
 

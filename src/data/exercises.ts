@@ -83,7 +83,7 @@ export const exercises: Exercise[] = [
   },
   {
     id: 'triceps_dips',
-    name: 'Triceps Dips on Chair',
+    name: 'Triceps Dips',
     focus: 'Arms',
     met: 5,
     steps: [
