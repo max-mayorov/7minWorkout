@@ -6,6 +6,7 @@ import { ExerciseFigure } from '../../components/ExerciseFigure';
 import { Button, Card, Icon, SectionTitle, StepperRow } from '../../components/ui';
 import { exercises, getExercise } from '../../data/exercises';
 import { formatClock } from '../../lib/dates';
+import { CLASSIC_REST_SEC, CLASSIC_WORK_SEC } from '../../lib/plans';
 import { useStore } from '../../state/store';
 import type { CustomWorkout } from '../../state/types';
 import { colors, spacing } from '../../theme';
@@ -23,8 +24,8 @@ export default function CustomWorkoutScreen() {
         id: newId(),
         name: '',
         exerciseIds: [],
-        workSec: settings.workSec,
-        restSec: settings.restSec,
+        workSec: CLASSIC_WORK_SEC,
+        restSec: CLASSIC_REST_SEC,
         rounds: settings.rounds,
       },
   );

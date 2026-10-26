@@ -4,7 +4,7 @@ An Android app for the classic 7-minute high-intensity circuit, built with React
 
 ## Features
 
-- **Classic 7-minute circuit**: 13 bodyweight exercises (jumping jacks, wall sit, push-ups, crunches, step-ups, squats, triceps dips, plank, high knees, lunges, push-up & rotation, and a side plank on each side).
+- **Classic 7-minute circuit**: 13 bodyweight exercises (jumping jacks, wall sit, push-ups, crunches, step-ups, squats, triceps dips, plank, high knees, lunges, push-up & rotation, and a side plank on each side), each done for 30 seconds with 10 seconds of rest in between.
 - **Workout player**
   - A get-ready countdown, then a circular timer with exercise and rest phases and a progress bar for the circuit.
   - Previous, pause and next controls, with a pause screen that offers resume or quit.
@@ -21,7 +21,7 @@ An Android app for the classic 7-minute high-intensity circuit, built with React
   - A month calendar with a dot for each workout. Tapping a day shows its sessions, with time, calories, pauses and how much of the workout was completed.
 - **Weight and BMI**: log your weight (kg or lbs), see a trend chart, and get your BMI once your height is set.
 - **Daily reminders**: local notifications at a chosen time on chosen weekdays.
-- **Settings**: number of circuits, exercise, rest and countdown lengths, sound, voice, units, height, and options to restart the challenge or clear history.
+- **Settings**: number of circuits, countdown length, sound, voice, units, height, and options to restart the challenge or clear history.
 
 All data stays on the device (AsyncStorage). There is no account, no network use and no Google Fit or Health Connect sync.
 

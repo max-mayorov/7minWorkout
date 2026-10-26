@@ -10,8 +10,6 @@ export type Reminder = {
 
 export type Settings = {
   rounds: number;
-  workSec: number;
-  restSec: number;
   countdownSec: number;
   sound: boolean;
   voice: boolean;
@@ -60,8 +58,6 @@ export type AppData = {
 
 export const defaultSettings: Settings = {
   rounds: 1,
-  workSec: 30,
-  restSec: 10,
   countdownSec: 15,
   sound: true,
   voice: true,

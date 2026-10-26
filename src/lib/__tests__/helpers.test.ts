@@ -33,10 +33,12 @@ describe('30 day challenge', () => {
 });
 
 describe('plans', () => {
-  it('builds the classic plan from settings', () => {
+  it('builds the classic plan with fixed 30s work and 10s rest', () => {
     const plan = resolvePlan(CLASSIC_ID, defaultSettings, []);
     expect(plan?.exerciseIds).toHaveLength(13);
+    expect(plan).toMatchObject({ workSec: 30, restSec: 10 });
     expect(planDurationSec(plan!)).toBe(13 * 30 + 12 * 10);
+    expect(resolvePlan(CLASSIC_ID, { ...defaultSettings, rounds: 2 }, [])?.rounds).toBe(2);
   });
 
   it('round-trips challenge ids and refuses rest days', () => {
