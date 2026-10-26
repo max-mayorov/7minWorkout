@@ -13,6 +13,9 @@ export type WorkoutPlan = {
 };
 
 export const CLASSIC_ID = 'classic';
+// The classic circuit always uses the standard HICT timings; only the number of circuits is configurable.
+export const CLASSIC_WORK_SEC = 30;
+export const CLASSIC_REST_SEC = 10;
 const CHALLENGE_PREFIX = 'challenge-';
 
 export function challengeWorkoutId(day: number): string {
@@ -37,8 +40,8 @@ export function resolvePlan(
       id: CLASSIC_ID,
       title: 'Classic 7 Minute',
       exerciseIds: classicOrder,
-      workSec: settings.workSec,
-      restSec: settings.restSec,
+      workSec: CLASSIC_WORK_SEC,
+      restSec: CLASSIC_REST_SEC,
       rounds: settings.rounds,
       countdownSec,
     };

@@ -66,26 +66,6 @@ export default function SettingsScreen() {
           onChange={(rounds) => updateSettings({ rounds })}
         />
         <StepperRow
-          label="Exercise time"
-          icon="timer-outline"
-          value={settings.workSec}
-          min={10}
-          max={120}
-          step={5}
-          format={seconds}
-          onChange={(workSec) => updateSettings({ workSec })}
-        />
-        <StepperRow
-          label="Rest time"
-          icon="coffee-outline"
-          value={settings.restSec}
-          min={0}
-          max={60}
-          step={5}
-          format={seconds}
-          onChange={(restSec) => updateSettings({ restSec })}
-        />
-        <StepperRow
           label="Get-ready countdown"
           icon="timer-sand"
           value={settings.countdownSec}
